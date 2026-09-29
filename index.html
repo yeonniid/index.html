@@ -9,6 +9,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Firebase 실시간 데이터베이스 SDK (v9 호환 모드) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
 :root{--primary:#4A3B32;--secondary:#9B2226;--bg:#F9F6F0;--card:#fff;--text:#2C2C2C;--light:#666;--border:#E2DAC8;--ok:#27ae60}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Serif KR',serif}
@@ -50,9 +55,10 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
 
 .rank-box{background:linear-gradient(135deg, var(--primary), #6d5242);color:#fff;padding:18px;border-radius:10px;text-align:center;margin-bottom:15px;box-shadow:0 3px 6px rgba(0,0,0,.1)}
 .rank-title{font-size:1.4rem;font-weight:700;color:#f1c40f;margin:8px 0}
-.leaderboard-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:.88rem}
-.leaderboard-table th, .leaderboard-table td{padding:12px;text-align:center;border-bottom:1px solid var(--border)}
+.leaderboard-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:.85rem}
+.leaderboard-table th, .leaderboard-table td{padding:10px 6px;text-align:center;border-bottom:1px solid var(--border)}
 .leaderboard-table th{background:#f4f0e6;color:var(--primary);font-weight:700}
+.my-rank-row{background:#fff9e6;font-weight:bold}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -113,7 +119,7 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
     <button class="btn ghost" onclick="logout()">로그아웃 / 기록 초기화</button>
   </section>
 
-  <!-- 탭 5: 장원급제 (실시간 포인트 적립) -->
+  <!-- 탭 5: 장원급제 (전체 실시간 순위표) -->
   <section id="view-rank" class="view">
     <div class="rank-box">
       <div style="font-size:.85rem;opacity:.9">🎓 나의 답사 성취도</div>
@@ -121,22 +127,19 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
       <div style="font-size:.85rem;opacity:.9" id="user-rank-next">다음 등급: '초시 합격' (100pt 필요)</div>
     </div>
     <div class="card">
-      <h2>🏆 장원급제 등급 현황</h2>
-      <p style="font-size:.85rem;color:var(--light);margin-bottom:12px">현장 미션 1개를 완료할 때마다 <strong>100pt</strong>가 자동 적립됩니다.</p>
+      <h2>🏆 실시간 장원급제 리더보드</h2>
+      <p style="font-size:.8rem;color:var(--light);margin-bottom:12px">접속 중인 모든 학생의 미션 포인트와 순위가 실시간 반영됩니다.</p>
       <table class="leaderboard-table">
         <thead>
           <tr>
+            <th>순위</th>
             <th>성명 (학번)</th>
             <th>현재 등급</th>
-            <th>획득 포인트</th>
+            <th>포인트</th>
           </tr>
         </thead>
-        <tbody>
-          <tr style="background:#fff9e6">
-            <td><strong id="rank-my-team">내 계정</strong></td>
-            <td id="rank-my-grade" style="color:var(--secondary);font-weight:700">성균관 유생</td>
-            <td id="rank-my-score" style="font-weight:700">0 pt</td>
-          </tr>
+        <tbody id="global-leaderboard-body">
+          <tr><td colspan="4" style="padding:15px;color:#888">실시간 포인트를 불러오는 중...</td></tr>
         </tbody>
       </table>
     </div>
@@ -173,7 +176,14 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
 </nav>
 
 <script>
-// ===== 설정 =====
+// ===== Firebase 데모 데이터베이스 설정 (즉시 공유용) =====
+const firebaseConfig = {
+  databaseURL: "https://edu-tour-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ===== 기본 설정 =====
 const RADIUS_M = 500;
 const MAX_ACCURACY_M = 150;
 const OBSERVATION_MS = 3 * 60 * 1000;
@@ -205,23 +215,34 @@ const nameOf = id => missionData.find(x=>x.id===id).name;
 
 // ===== 초기화 / 탭 =====
 function initApp(){
-  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();
+  if(navigator.storage&&navigator.storagepersist) navigator.storage.persist();
   try { const s=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(s) appState=Object.assign(appState,s); } catch(e){}
   missionData.forEach(m => { if(!appState.missions[m.id]) appState.missions[m.id]={unlocked:false,timerEnd:null,imgBase64:"",text:""}; });
   $('radius-label').textContent = RADIUS_M;
   updateDevToggleUI();
-  if(appState.studentId){ $('main-nav').style.display='flex'; switchTab('gps'); }
+  
+  if(appState.studentId){ 
+    $('main-nav').style.display='flex'; 
+    switchTab('gps'); 
+    syncToFirebase(); // 초기 접속 시 파이어베이스 점수 동기화
+  }
+  
+  listenToGlobalLeaderboard(); // 실시간 통합 순위표 구독
 }
+
 function appLogin(){
   const id=$('login-id').value.trim(), nm=$('login-name').value.trim();
   if(!id||!nm) return toast("학번과 성명을 모두 입력하세요.");
   appState.studentId=id; appState.studentName=nm; saveState();
   $('main-nav').style.display='flex'; switchTab('gps');
+  syncToFirebase();
 }
+
 function logout(){
   if(!confirm("모든 기록이 삭제됩니다. 도감을 이미지로 먼저 저장하셨나요?\n계속할까요?")) return;
   stopTracking(); localStorage.removeItem(STORAGE_KEY); location.reload();
 }
+
 function switchTab(tab){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
@@ -325,7 +346,7 @@ function toggleDevMode(){
 }
 function updateDevToggleUI(){ const t=$('dev-toggle'); t.className=appState.devMode?'active':''; t.textContent=appState.devMode?'교사 패스 ON':'교사 패스'; }
 
-// ===== 미션 =====
+// ===== 미션 처리 =====
 function renderMissions(){
   const list=$('mission-list'); let out="";
   missionData.forEach(m=>{
@@ -359,7 +380,7 @@ function tick(){
 function startTimer(id){ appState.missions[id].timerEnd=Date.now()+OBSERVATION_MS; saveState(); renderMissions(); }
 function redoMission(id){
   if(!confirm("기존 기록을 지우고 다시 작성할까요?")) return;
-  Object.assign(appState.missions[id],{imgBase64:"",text:""}); saveState(); renderMissions();
+  Object.assign(appState.missions[id],{imgBase64:"",text:""}); saveState(); renderMissions(); syncToFirebase();
 }
 function handleImage(e,id){
   const file=e.target.files[0]; if(!file) return;
@@ -375,7 +396,6 @@ function handleImage(e,id){
   img.src=url;
 }
 
-// 미션 저장 시 100pt 적립 연동
 function saveMission(id){
   const text=$('text-'+id).value.trim();
   if(!tempImgs[id]) return toast("사진을 촬영하거나 첨부해 주세요.");
@@ -384,8 +404,9 @@ function saveMission(id){
   s.imgBase64=tempImgs[id]; s.text=text;
   if(!saveState()){ s.imgBase64=prev.img; s.text=prev.text; return; }
   delete tempImgs[id]; 
-  toast("🎉 미션 완료! 100pt가 적립되었습니다.", 3500); 
+  toast("🎉 미션 완료! 100pt가 실시간 적립되었습니다.", 3500); 
   renderMissions();
+  syncToFirebase(); // 서버로 점수 업데이트
 }
 
 // ===== 도감 =====
@@ -412,35 +433,76 @@ function exportToImage(){
   }).catch(()=>{ t.style.background=bg; toast("이미지 저장에 실패했습니다. 화면 캡처를 이용해 주세요."); });
 }
 
-// ===== 실시간 장원급제 등급 연산 =====
-function updateRankUI(){
+// ===== Firebase 실시간 연동 / 장원급제 연산 =====
+function calculateScore(){
   let completedCount = 0;
   missionData.forEach(m => {
     const s = appState.missions[m.id];
     if(s && s.imgBase64 && s.text) completedCount++;
   });
+  return completedCount * 100;
+}
 
-  const totalScore = completedCount * 100; // 미션 1개당 100pt 자동 적립
-  let rankName = '성균관 유생';
+function getRankTitle(score){
+  if(score >= 500) return '전시 합격 (장원급제)';
+  if(score >= 300) return '복시 합격 (진사)';
+  if(score >= 100) return '초시 합격 (생원)';
+  return '성균관 유생';
+}
+
+function syncToFirebase(){
+  if(!appState.studentId || !appState.studentName) return;
+  const score = calculateScore();
+  const rankTitle = getRankTitle(score);
+  
+  // 학번 기반으로 실시간 데이터베이스에 업로드
+  db.ref('users/' + appState.studentId).set({
+    studentId: appState.studentId,
+    studentName: appState.studentName,
+    score: score,
+    rankTitle: rankTitle,
+    lastUpdated: Date.now()
+  });
+}
+
+function updateRankUI(){
+  const totalScore = calculateScore();
+  const rankName = getRankTitle(totalScore);
   let nextText = "다음 등급: '초시 합격' (100pt 필요)";
 
-  if(totalScore >= 500){
-    rankName = '전시 합격 (장원급제)';
-    nextText = '🎉 축하합니다! 최고 등급인 장원급제에 달성하셨습니다!';
-  } else if(totalScore >= 300){
-    rankName = '복시 합격 (진사)';
-    nextText = "다음 등급: '장원급제' (500pt 필요)";
-  } else if(totalScore >= 100){
-    rankName = '초시 합격 (생원)';
-    nextText = "다음 등급: '복시 합격' (300pt 필요)";
-  }
+  if(totalScore >= 500) nextText = '🎉 축하합니다! 최고 등급인 장원급제에 달성하셨습니다!';
+  else if(totalScore >= 300) nextText = "다음 등급: '장원급제' (500pt 필요)";
+  else if(totalScore >= 100) nextText = "다음 등급: '복시 합격' (300pt 필요)";
 
   $('user-rank-display').textContent = `${rankName} (${totalScore}pt)`;
   $('user-rank-next').textContent = nextText;
-  
-  if($('rank-my-team'))$('rank-my-team').textContent = `${appState.studentName} (${appState.studentId})`;
-  if($('rank-my-grade'))$('rank-my-grade').textContent = rankName;
-  if($('rank-my-score'))$('rank-my-score').textContent = `${totalScore} pt`;
+}
+
+// 모든 접속자 순위표 실시간 구독
+function listenToGlobalLeaderboard(){
+  db.ref('users').on('value', snapshot => {
+    const data = snapshot.val();
+    const listBody = $('global-leaderboard-body');
+    if(!data){
+      listBody.innerHTML = '<tr><td colspan="4" style="padding:15px;color:#888">등록된 참가자가 없습니다.첫 미션을 완료해보세요!</td></tr>';
+      return;
+    }
+
+    // 포인트를 기준으로 내림차순 정렬
+    const users = Object.values(data).sort((a, b) => b.score - a.score);
+    
+    let html = "";
+    users.forEach((u, index) => {
+      const isMe = u.studentId === appState.studentId;
+      html += `<tr class="${isMe ? 'my-rank-row' : ''}">
+        <td><b>${index + 1}위</b></td>
+        <td>${esc(u.studentName)} (${esc(u.studentId)}) ${isMe ? '👈 나' : ''}</td>
+        <td style="color:var(--secondary);">${esc(u.rankTitle)}</td>
+        <td><b>${u.score} pt</b></td>
+      </tr>`;
+    });
+    listBody.innerHTML = html;
+  });
 }
 
 window.addEventListener('load', initApp);
