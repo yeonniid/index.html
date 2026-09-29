@@ -48,11 +48,10 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
 #toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:rgba(44,44,44,.95);color:#fff;padding:10px 18px;border-radius:20px;font-size:.85rem;z-index:3000;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 
-/* 신규 탭 전용 추가 스타일 */
-.rank-box{background:linear-gradient(135deg, var(--primary), #6d5242);color:#fff;padding:16px;border-radius:10px;text-align:center;margin-bottom:15px;box-shadow:0 3px 6px rgba(0,0,0,.1)}
-.rank-title{font-size:1.35rem;font-weight:700;color:#f1c40f;margin:6px 0}
-.leaderboard-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:.85rem}
-.leaderboard-table th, .leaderboard-table td{padding:10px;text-align:center;border-bottom:1px solid var(--border)}
+.rank-box{background:linear-gradient(135deg, var(--primary), #6d5242);color:#fff;padding:18px;border-radius:10px;text-align:center;margin-bottom:15px;box-shadow:0 3px 6px rgba(0,0,0,.1)}
+.rank-title{font-size:1.4rem;font-weight:700;color:#f1c40f;margin:8px 0}
+.leaderboard-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:.88rem}
+.leaderboard-table th, .leaderboard-table td{padding:12px;text-align:center;border-bottom:1px solid var(--border)}
 .leaderboard-table th{background:#f4f0e6;color:var(--primary);font-weight:700}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -114,50 +113,36 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
     <button class="btn ghost" onclick="logout()">로그아웃 / 기록 초기화</button>
   </section>
 
-  <!-- 신규 탭 5: 장원급제 (게이미피케이션 리더보드) -->
+  <!-- 탭 5: 장원급제 (실시간 포인트 적립) -->
   <section id="view-rank" class="view">
     <div class="rank-box">
-      <div style="font-size:.85rem;opacity:.9">조선시대 과거제도 모티브</div>
+      <div style="font-size:.85rem;opacity:.9">🎓 나의 답사 성취도</div>
       <div class="rank-title" id="user-rank-display">성균관 유생 (0pt)</div>
-      <div style="font-size:.8rem;opacity:.85" id="user-rank-next">다음 등급: '초시 합격' (100pt 필요)</div>
+      <div style="font-size:.85rem;opacity:.9" id="user-rank-next">다음 등급: '초시 합격' (100pt 필요)</div>
     </div>
     <div class="card">
-      <h2>🏆 실시간 장원급제 리더보드</h2>
-      <p style="font-size:.8rem;color:var(--light);margin-bottom:10px">현장 미션을 완료할 때마다 점수가 누적되어 품계가 상승합니다.</p>
+      <h2>🏆 장원급제 등급 현황</h2>
+      <p style="font-size:.85rem;color:var(--light);margin-bottom:12px">현장 미션 1개를 완료할 때마다 <strong>100pt</strong>가 자동 적립됩니다.</p>
       <table class="leaderboard-table">
         <thead>
           <tr>
-            <th>순위</th>
-            <th>조 이름</th>
+            <th>성명 (학번)</th>
             <th>현재 등급</th>
-            <th>점수</th>
+            <th>획득 포인트</th>
           </tr>
         </thead>
-        <tbody id="leaderboard-body">
-          <tr>
-            <td>1</td>
-            <td>3조 (지리학파)</td>
-            <td>진사(進士)</td>
-            <td>300 pt</td>
-          </tr>
+        <tbody>
           <tr style="background:#fff9e6">
-            <td>2</td>
-            <td><strong id="rank-my-team">우리조 (내 계정)</strong></td>
-            <td id="rank-my-grade">유생(儒生)</td>
-            <td id="rank-my-score">0 pt</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>1조 (교육사팀)</td>
-            <td>유생(儒生)</td>
-            <td>100 pt</td>
+            <td><strong id="rank-my-team">내 계정</strong></td>
+            <td id="rank-my-grade" style="color:var(--secondary);font-weight:700">성균관 유생</td>
+            <td id="rank-my-score" style="font-weight:700">0 pt</td>
           </tr>
         </tbody>
       </table>
     </div>
   </section>
 
-  <!-- 신규 탭 6: 답사 안내사항 -->
+  <!-- 탭 6: 안내사항 -->
   <section id="view-notice" class="view">
     <div class="card">
       <h2>📢 답사 유의사항 &amp; 안전 수칙</h2>
@@ -177,7 +162,7 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
   </section>
 </div>
 
-<!-- 하단 내비게이션 바 (6개 탭) -->
+<!-- 하단 내비게이션 바 -->
 <nav id="main-nav" style="display:none" aria-label="주요 메뉴">
   <button onclick="switchTab('schedule')" id="nav-schedule"><span>🗓️</span>일정</button>
   <button onclick="switchTab('gps')" id="nav-gps"><span>🗺️</span>경로지도</button>
@@ -189,12 +174,11 @@ nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;heig
 
 <script>
 // ===== 설정 =====
-const RADIUS_M = 500;              // 해금 반경
-const MAX_ACCURACY_M = 150;        // 이보다 부정확한 GPS 값은 해금에 사용 안 함
+const RADIUS_M = 500;
+const MAX_ACCURACY_M = 150;
 const OBSERVATION_MS = 3 * 60 * 1000;
-const TEACHER_PIN = "1105";        // ⚠️ 클라이언트 코드에 노출됨 - 억제용일 뿐 보안 수단이 아님
+const TEACHER_PIN = "1105";
 const STORAGE_KEY = 'eduTourV3';
-const VWORLD_KEY = "";
 
 const missionData = [
   { id:'yangdong', name:'양동마을', lat:36.0003, lng:129.2514, observation:'고택들 사이로 부는 바람결과 마을의 고즈넉한 풍경을 눈과 귀로 온전히 담아보세요.', task:'가장 인상 깊었던 고택의 처마나 골목길을 촬영하고, 가문 교육의 의미를 적어보세요.' },
@@ -205,7 +189,7 @@ const missionData = [
 ];
 
 let appState = { studentId:"", studentName:"", devMode:false, tracking:false, missions:{} };
-const tempImgs = {};               // 저장 전 사진은 메모리에만 보관
+const tempImgs = {};
 let map=null, userMarker=null, accCircle=null, watchId=null, tickId=null;
 const mapCircles={}, mapMarkers={};
 
@@ -254,19 +238,12 @@ function switchTab(tab){
 function initMap(){
   if(map){ map.invalidateSize(); return; }
   map = L.map('map').setView([35.9,129.22],11);
-  const T = (u,o)=>L.tileLayer(u,Object.assign({maxZoom:19},o));
-  const layers = {};
-  if(VWORLD_KEY) layers['VWorld 기본']=T(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Base/{z}/{y}/{x}.png`,{attribution:'&copy; VWorld',maxZoom:18});
-  layers['CARTO']=T('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap contributors &copy; CARTO',subdomains:'abcd'});
-  layers['Esri']=T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri'});
-  layers['위성']=T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri'});
-  const order = Object.keys(layers).filter(k=>k!=='위성');
-  let cur = 0; layers[order[0]].addTo(map);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
 
-  order.forEach((k,i)=>{ let errs=0; layers[k].on('tileerror',()=>{
-    if(++errs>=6 && cur===i && i<order.length-1){ map.removeLayer(layers[k]); cur=i+1; layers[order[cur]].addTo(map); toast('지도 서버 오류로 '+order[cur]+' 지도로 전환했습니다.'); }
-  }); layers[k].on('tileload',()=>{ errs=0; }); });
-  L.control.layers(layers,null,{position:'topright'}).addTo(map);
   missionData.forEach(m=>{
     const color = appState.missions[m.id].unlocked ? '#27ae60' : '#c0392b';
     mapCircles[m.id]=L.circle([m.lat,m.lng],{color,fillColor:color,fillOpacity:.2,radius:RADIUS_M}).addTo(map);
@@ -362,7 +339,7 @@ function renderMissions(){
       <div class="file-wrap"><button class="btn secondary" style="pointer-events:none;margin:0">📸 현장 사진 촬영/첨부</button><input type="file" accept="image/*" capture="environment" aria-label="사진 첨부" onchange="handleImage(event,'${m.id}')"></div>
       <img id="preview-${m.id}" class="img-preview" style="display:${tempImgs[m.id]?'block':'none'}" ${tempImgs[m.id]?`src="${tempImgs[m.id]}"`:''} alt="첨부 사진 미리보기">
       <textarea id="text-${m.id}" placeholder="짧은 소감이나 생각을 적어주세요." maxlength="500"></textarea>
-      <button class="btn success" onclick="saveMission('${m.id}')">기록 저장하기</button>`;
+      <button class="btn success" onclick="saveMission('${m.id}')">기록 저장하기 (+100pt)</button>`;
     const tag = s.unlocked && !done ? '<span class="badge b-unlock">진행중</span>' : done ? '<span class="badge b-done">기록 완료</span>' : '';
     out+=`<div class="card"><h2>${esc(m.name)} ${tag}</h2>${body}</div>`;
   });
@@ -397,6 +374,8 @@ function handleImage(e,id){
   img.onerror=()=>toast("사진을 불러오지 못했습니다. 다른 사진을 선택하세요.");
   img.src=url;
 }
+
+// 미션 저장 시 100pt 적립 연동
 function saveMission(id){
   const text=$('text-'+id).value.trim();
   if(!tempImgs[id]) return toast("사진을 촬영하거나 첨부해 주세요.");
@@ -404,7 +383,9 @@ function saveMission(id){
   const s=appState.missions[id], prev={img:s.imgBase64,text:s.text};
   s.imgBase64=tempImgs[id]; s.text=text;
   if(!saveState()){ s.imgBase64=prev.img; s.text=prev.text; return; }
-  delete tempImgs[id]; toast("기록이 저장되었습니다."); renderMissions();
+  delete tempImgs[id]; 
+  toast("🎉 미션 완료! 100pt가 적립되었습니다.", 3500); 
+  renderMissions();
 }
 
 // ===== 도감 =====
@@ -431,7 +412,7 @@ function exportToImage(){
   }).catch(()=>{ t.style.background=bg; toast("이미지 저장에 실패했습니다. 화면 캡처를 이용해 주세요."); });
 }
 
-// ===== 신규: 장원급제 등급 연산 =====
+// ===== 실시간 장원급제 등급 연산 =====
 function updateRankUI(){
   let completedCount = 0;
   missionData.forEach(m => {
@@ -439,13 +420,13 @@ function updateRankUI(){
     if(s && s.imgBase64 && s.text) completedCount++;
   });
 
-  const totalScore = completedCount * 100; // 미션 1개당 100pt
+  const totalScore = completedCount * 100; // 미션 1개당 100pt 자동 적립
   let rankName = '성균관 유생';
   let nextText = "다음 등급: '초시 합격' (100pt 필요)";
 
   if(totalScore >= 500){
     rankName = '전시 합격 (장원급제)';
-    nextInfo = '최고 등급에 달성하였습니다!';
+    nextText = '🎉 축하합니다! 최고 등급인 장원급제에 달성하셨습니다!';
   } else if(totalScore >= 300){
     rankName = '복시 합격 (진사)';
     nextText = "다음 등급: '장원급제' (500pt 필요)";
