@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>전북대학교 교육학과 경주 교육사 답사</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--primary:#4A3B32;--secondary:#9B2226;--bg:#F9F6F0;--card:#fff;--text:#2C2C2C;--light:#666;--border:#E2DAC8;--ok:#27ae60}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Serif KR',serif}
+body{background:var(--bg);color:var(--text);padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+header{background:var(--primary);color:#fff;padding:14px 70px;text-align:center;position:sticky;top:0;z-index:2000;box-shadow:0 2px 5px rgba(0,0,0,.15)}
+header h1{font-size:1.1rem}
+#dev-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:1px solid #fff;color:#fff;padding:4px 8px;border-radius:4px;font-size:.7rem;cursor:pointer}
+#dev-toggle.active{background:var(--secondary);border-color:var(--secondary)}
+.container{padding:15px;max-width:600px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:15px;box-shadow:0 3px 6px rgba(0,0,0,.05)}
+.card h2{font-size:1.05rem;color:var(--primary);margin-bottom:10px;border-bottom:2px solid var(--border);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.card h3{font-size:1rem;color:var(--secondary);margin-bottom:5px}
+.card p{font-size:.9rem;line-height:1.7;margin-bottom:8px}
+.pre{white-space:pre-wrap;word-break:break-word;background:#f4f4f4;padding:10px;border-radius:5px}
+#map-container{width:100%;height:60vh;border-radius:10px;border:2px solid var(--primary);overflow:hidden;margin-bottom:12px;position:relative}
+#map{width:100%;height:100%}
+#tracking-status{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.93);padding:7px 14px;border-radius:20px;font-size:.8rem;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:1000;white-space:nowrap}
+.btn{display:block;width:100%;padding:13px;background:var(--primary);color:#fff;text-align:center;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn.secondary{background:var(--secondary)}.btn.success{background:var(--ok)}.btn.blue{background:#2980b9}.btn.ghost{background:none;color:var(--light);border:1px solid var(--border);font-weight:400;font-size:.85rem;padding:9px}
+.btn:focus-visible,nav button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #2980b9;outline-offset:2px}
+input[type=text],textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:5px;margin-bottom:12px;font-size:1rem}
+textarea{height:100px;resize:none}
+.img-preview{width:100%;max-height:250px;object-fit:cover;border-radius:5px;margin-bottom:10px;border:1px solid #ddd}
+.file-wrap{position:relative;overflow:hidden;margin-bottom:10px}
+.file-wrap input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:100px}
+.timer-box{background:#FDEBD0;border:2px solid #E67E22;padding:14px;border-radius:8px;text-align:center;margin:12px 0}
+.timer-text{font-size:2.2rem;font-weight:700;color:#D35400;font-family:monospace}
+.warn{color:var(--secondary);font-size:.9rem;font-weight:700;text-align:center;display:block;margin-bottom:10px}
+.badge{padding:3px 10px;border-radius:12px;font-size:.75rem;color:#fff;font-weight:700}
+.b-unlock{background:var(--ok)}.b-done{background:var(--primary)}
+nav{position:fixed;bottom:0;width:100%;background:#fff;border-top:1px solid var(--border);display:flex;z-index:2000;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+nav button{background:none;border:none;font-size:.7rem;color:var(--light);flex:1;cursor:pointer;display:flex;flex-direction:column;align-items:center;position:relative}
+nav button.active{color:var(--secondary);font-weight:700}
+nav button span{font-size:1.2rem;margin-bottom:2px}
+nav button.dot::after{content:'';position:absolute;top:0;left:56%;width:8px;height:8px;background:var(--secondary);border-radius:50%}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:rgba(44,44,44,.95);color:#fff;padding:10px 18px;border-radius:20px;font-size:.85rem;z-index:3000;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+
+/* 신규 탭 전용 추가 스타일 */
+.rank-box{background:linear-gradient(135deg, var(--primary), #6d5242);color:#fff;padding:16px;border-radius:10px;text-align:center;margin-bottom:15px;box-shadow:0 3px 6px rgba(0,0,0,.1)}
+.rank-title{font-size:1.35rem;font-weight:700;color:#f1c40f;margin:6px 0}
+.leaderboard-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:.85rem}
+.leaderboard-table th, .leaderboard-table td{padding:10px;text-align:center;border-bottom:1px solid var(--border)}
+.leaderboard-table th{background:#f4f0e6;color:var(--primary);font-weight:700}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><h1>경주 교육사 현장 답사</h1><button id="dev-toggle" onclick="toggleDevMode()">교사 패스</button></header>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="container">
+  <section id="view-login" class="view active">
+    <div class="card" style="margin-top:20px">
+      <h2 style="justify-content:center;border:none">답사 기록장 발급</h2>
+      <p style="text-align:center;margin-bottom:20px">학번과 이름을 입력하면 도감이 만들어집니다.</p>
+      <input type="text" id="login-id" placeholder="학번 (예: 20260001)" inputmode="numeric" autocomplete="off">
+      <input type="text" id="login-name" placeholder="성명 (예: 홍길동)" autocomplete="off">
+      <button class="btn" onclick="appLogin()">기록장 열기</button>
+    </div>
+  </section>
+
+  <!-- 탭 1: 일정 -->
+  <section id="view-schedule" class="view">
+    <div class="card">
+      <h3>🗓️ 1일차 (11월 5일)</h3>
+      <ul style="padding-left:20px;font-size:.9rem;line-height:1.8;margin-bottom:15px">
+        <li><b>12:40~14:10</b> | 양동마을 (성리학/문중 교육)</li>
+        <li><b>14:23~15:23</b> | 옥산서원 (회재 이언적)</li>
+        <li><b>16:00~17:30</b> | 국립경주박물관</li>
+        <li><b>17:40~19:00</b> | 대릉원 &amp; 첨성대 (과학/천문)</li>
+        <li><b>19:00~21:30</b> | 황리단길 &amp; 동궁과 월지</li>
+      </ul>
+      <h3>🗓️ 2일차 (11월 6일)</h3>
+      <ul style="padding-left:20px;font-size:.9rem;line-height:1.8">
+        <li><b>09:00~11:30</b> | 경주향교 &amp; 교촌마을 (관학 교육)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 탭 2: 경로지도 -->
+  <section id="view-gps" class="view">
+    <div class="card" style="padding:10px">
+      <p style="text-align:center;color:var(--secondary);font-weight:700;margin-bottom:8px">붉은 원(반경 <span id="radius-label"></span>m) 안에 들어서면 미션이 열립니다.</p>
+      <div id="map-container"><div id="map"></div><div id="tracking-status">🔴 위치 추적 전</div></div>
+      <div id="dist-list" style="font-size:.85rem;line-height:1.9;margin-bottom:10px"></div>
+      <button class="btn secondary" id="btn-track" onclick="toggleTracking()">🚀 내 위치 추적 시작</button>
+      <button class="btn blue" id="btn-recenter" style="display:none" onclick="recenterMap()">🎯 내 위치로 이동</button>
+    </div>
+  </section>
+
+  <!-- 탭 3: 현장미션 -->
+  <section id="view-missions" class="view"><div id="mission-list"></div></section>
+
+  <!-- 탭 4: 내기록 -->
+  <section id="view-record" class="view">
+    <div id="record-content" style="background:var(--bg);padding:10px">
+      <h2 style="margin-bottom:12px;font-size:1.25rem">📜 <span id="record-username"></span>의 도감</h2>
+      <div id="record-list"></div>
+    </div>
+    <button class="btn" style="margin-top:12px" onclick="exportToImage()">📸 도감을 이미지로 저장 (제출용)</button>
+    <button class="btn ghost" onclick="logout()">로그아웃 / 기록 초기화</button>
+  </section>
+
+  <!-- 신규 탭 5: 장원급제 (게이미피케이션 리더보드) -->
+  <section id="view-rank" class="view">
+    <div class="rank-box">
+      <div style="font-size:.85rem;opacity:.9">조선시대 과거제도 모티브</div>
+      <div class="rank-title" id="user-rank-display">성균관 유생 (0pt)</div>
+      <div style="font-size:.8rem;opacity:.85" id="user-rank-next">다음 등급: '초시 합격' (100pt 필요)</div>
+    </div>
+    <div class="card">
+      <h2>🏆 실시간 장원급제 리더보드</h2>
+      <p style="font-size:.8rem;color:var(--light);margin-bottom:10px">현장 미션을 완료할 때마다 점수가 누적되어 품계가 상승합니다.</p>
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>순위</th>
+            <th>조 이름</th>
+            <th>현재 등급</th>
+            <th>점수</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <tr>
+            <td>1</td>
+            <td>3조 (지리학파)</td>
+            <td>진사(進士)</td>
+            <td>300 pt</td>
+          </tr>
+          <tr style="background:#fff9e6">
+            <td>2</td>
+            <td><strong id="rank-my-team">우리조 (내 계정)</strong></td>
+            <td id="rank-my-grade">유생(儒生)</td>
+            <td id="rank-my-score">0 pt</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>1조 (교육사팀)</td>
+            <td>유생(儒生)</td>
+            <td>100 pt</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 신규 탭 6: 답사 안내사항 -->
+  <section id="view-notice" class="view">
+    <div class="card">
+      <h2>📢 답사 유의사항 &amp; 안전 수칙</h2>
+      <ul style="padding-left:18px;font-size:.88rem;line-height:1.8;color:#444">
+        <li><b>안전 최우선:</b> 이동 중 휴대폰 사용을 자제하고 주변 지형을 확인하세요.</li>
+        <li><b>문화재 보호:</b> 고택 및 서원 내 문화재에 손상을 주지 않도록 주의하세요.</li>
+        <li><b>시간 준수:</b> 조별 미션 수행 시 버스 출발 및 집결 시간을 엄수해 주세요.</li>
+        <li><b>비상 연락처:</b> 답사 진행 요원 및 교수님 연락처를 미리 입력해 두세요.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>🚌 조별 미션 가이드</h2>
+      <p style="font-size:.88rem;line-height:1.7">
+        미션 장소에 도착하여 GPS 붉은 반경 안에 들어서면 미션이 자동 해금됩니다. 3분간 스마트폰을 내려놓고 현장을 오감으로 느낀 후 사진과 관찰 소감을 작성하세요!
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- 하단 내비게이션 바 (6개 탭) -->
+<nav id="main-nav" style="display:none" aria-label="주요 메뉴">
+  <button onclick="switchTab('schedule')" id="nav-schedule"><span>🗓️</span>일정</button>
+  <button onclick="switchTab('gps')" id="nav-gps"><span>🗺️</span>경로지도</button>
+  <button onclick="switchTab('missions')" id="nav-missions"><span>📝</span>현장미션</button>
+  <button onclick="switchTab('record')" id="nav-record"><span>📜</span>내기록</button>
+  <button onclick="switchTab('rank')" id="nav-rank"><span>🏆</span>장원급제</button>
+  <button onclick="switchTab('notice')" id="nav-notice"><span>📢</span>안내사항</button>
+</nav>
+
+<script>
+// ===== 설정 =====
+const RADIUS_M = 500;              // 해금 반경
+const MAX_ACCURACY_M = 150;        // 이보다 부정확한 GPS 값은 해금에 사용 안 함
+const OBSERVATION_MS = 3 * 60 * 1000;
+const TEACHER_PIN = "1105";        // ⚠️ 클라이언트 코드에 노출됨 - 억제용일 뿐 보안 수단이 아님
+const STORAGE_KEY = 'eduTourV3';
+const VWORLD_KEY = "";
+
+const missionData = [
+  { id:'yangdong', name:'양동마을', lat:36.0003, lng:129.2514, observation:'고택들 사이로 부는 바람결과 마을의 고즈넉한 풍경을 눈과 귀로 온전히 담아보세요.', task:'가장 인상 깊었던 고택의 처마나 골목길을 촬영하고, 가문 교육의 의미를 적어보세요.' },
+  { id:'oksan', name:'옥산서원', lat:36.0125, lng:129.1830, observation:'스마트폰을 주머니에 넣고 세심대 계곡의 물소리를 들으며 마음을 씻어(洗心)보세요.', task:'옥산서원의 현판이나 세심대 바위를 촬영하고, 진정한 배움의 자세를 기록하세요.' },
+  { id:'museum', name:'국립경주박물관', lat:35.8306, lng:129.2272, observation:'성덕대왕신종의 웅장한 형태를 관찰하며 그 시대의 장인정신을 상상해보세요.', task:'가장 기억에 남는 신라 유물의 디테일을 촬영하고 소감을 적으세요.' },
+  { id:'cheomseongdae', name:'대릉원 & 첨성대', lat:35.8347, lng:129.2190, observation:'첨성대의 돌이 쌓인 형태를 바라보며, 신라인들의 천문 관측을 상상해보세요.', task:'첨성대의 기단부나 대릉원의 능선을 촬영하고, 과학 교육에 대한 생각을 남겨주세요.' },
+  { id:'hyanggyo', name:'경주향교 & 교촌마을', lat:35.8290, lng:129.2155, observation:'향교 마당에 서서 천 년 전 이곳에서 학문을 익히던 유생들의 발자취를 떠올려보세요.', task:'향교의 기둥이나 전통 담장을 촬영하고, 전통 관학 교육의 의미를 기록하세요.' }
+];
+
+let appState = { studentId:"", studentName:"", devMode:false, tracking:false, missions:{} };
+const tempImgs = {};               // 저장 전 사진은 메모리에만 보관
+let map=null, userMarker=null, accCircle=null, watchId=null, tickId=null;
+const mapCircles={}, mapMarkers={};
+
+// ===== 유틸 =====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg, ms=2800){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),ms); }
+function saveState(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); return true; }
+  catch(e){ toast("저장 공간이 부족합니다. 도감을 이미지로 저장한 뒤 다시 시도하세요.", 4500); return false; }
+}
+const nameOf = id => missionData.find(x=>x.id===id).name;
+
+// ===== 초기화 / 탭 =====
+function initApp(){
+  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();
+  try { const s=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(s) appState=Object.assign(appState,s); } catch(e){}
+  missionData.forEach(m => { if(!appState.missions[m.id]) appState.missions[m.id]={unlocked:false,timerEnd:null,imgBase64:"",text:""}; });
+  $('radius-label').textContent = RADIUS_M;
+  updateDevToggleUI();
+  if(appState.studentId){ $('main-nav').style.display='flex'; switchTab('gps'); }
+}
+function appLogin(){
+  const id=$('login-id').value.trim(), nm=$('login-name').value.trim();
+  if(!id||!nm) return toast("학번과 성명을 모두 입력하세요.");
+  appState.studentId=id; appState.studentName=nm; saveState();
+  $('main-nav').style.display='flex'; switchTab('gps');
+}
+function logout(){
+  if(!confirm("모든 기록이 삭제됩니다. 도감을 이미지로 먼저 저장하셨나요?\n계속할까요?")) return;
+  stopTracking(); localStorage.removeItem(STORAGE_KEY); location.reload();
+}
+function switchTab(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  $('view-'+tab).classList.add('active');
+  if($('nav-'+tab))$('nav-'+tab).classList.add('active');
+  if(tab==='gps') setTimeout(initMap,100);
+  if(tab==='missions'){ $('nav-missions').classList.remove('dot'); renderMissions(); }
+  if(tab==='record') renderRecord();
+  if(tab==='rank') updateRankUI();
+  window.scrollTo(0,0);
+}
+
+// ===== 지도 / GPS =====
+function initMap(){
+  if(map){ map.invalidateSize(); return; }
+  map = L.map('map').setView([35.9,129.22],11);
+  const T = (u,o)=>L.tileLayer(u,Object.assign({maxZoom:19},o));
+  const layers = {};
+  if(VWORLD_KEY) layers['VWorld 기본']=T(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Base/{z}/{y}/{x}.png`,{attribution:'&copy; VWorld',maxZoom:18});
+  layers['CARTO']=T('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap contributors &copy; CARTO',subdomains:'abcd'});
+  layers['Esri']=T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri'});
+  layers['위성']=T('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri'});
+  const order = Object.keys(layers).filter(k=>k!=='위성');
+  let cur = 0; layers[order[0]].addTo(map);
+
+  order.forEach((k,i)=>{ let errs=0; layers[k].on('tileerror',()=>{
+    if(++errs>=6 && cur===i && i<order.length-1){ map.removeLayer(layers[k]); cur=i+1; layers[order[cur]].addTo(map); toast('지도 서버 오류로 '+order[cur]+' 지도로 전환했습니다.'); }
+  }); layers[k].on('tileload',()=>{ errs=0; }); });
+  L.control.layers(layers,null,{position:'topright'}).addTo(map);
+  missionData.forEach(m=>{
+    const color = appState.missions[m.id].unlocked ? '#27ae60' : '#c0392b';
+    mapCircles[m.id]=L.circle([m.lat,m.lng],{color,fillColor:color,fillOpacity:.2,radius:RADIUS_M}).addTo(map);
+    mapMarkers[m.id]=L.marker([m.lat,m.lng]).addTo(map).bindPopup(popupHtml(m.id));
+    mapMarkers[m.id].on('click',()=>{
+      if(appState.devMode && !appState.missions[m.id].unlocked){ unlockMission(m.id,true); }
+    });
+  });
+  map.fitBounds(L.latLngBounds(missionData.map(m=>[m.lat,m.lng])).pad(.2));
+  if(appState.tracking) startTracking();
+}
+const popupHtml = id => `<b>${esc(nameOf(id))}</b><br>${appState.missions[id].unlocked?'✅ 미션 해제됨':'🔒 반경 '+RADIUS_M+'m 안으로 접근'}`;
+
+let wl=null;
+async function keepAwake(){ try{ if('wakeLock' in navigator) wl=await navigator.wakeLock.request('screen'); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && watchId!==null) keepAwake(); });
+function toggleTracking(){ watchId===null ? startTracking() : stopTracking(); }
+function setStatus(t,c){ const s=$('tracking-status'); s.textContent=t; s.style.color=c||'inherit'; }
+function startTracking(){
+  if(!navigator.geolocation) return toast("이 기기는 GPS를 지원하지 않습니다.");
+  if(watchId!==null) return;
+  appState.tracking=true; saveState(); keepAwake();
+  $('btn-track').textContent='⏹ 추적 중지'; $('btn-recenter').style.display='block';
+  setStatus('🟡 위치 확인 중...','#b7791f');
+  watchId = navigator.geolocation.watchPosition(onPos, onPosErr, {enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+}
+function stopTracking(){
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  watchId=null; appState.tracking=false; saveState(); if(wl){wl.release();wl=null;}
+  $('btn-track').textContent='🚀 내 위치 추적 시작'; $('btn-recenter').style.display='none';
+  setStatus('🔴 위치 추적 전');
+}
+function onPos(pos){
+  const {latitude:lat, longitude:lng, accuracy} = pos.coords;
+  if(!userMarker){
+    const icon=L.divIcon({html:'<div style="background:#2980b9;width:15px;height:15px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 5px rgba(0,0,0,.5)"></div>',className:'',iconSize:[15,15]});
+    userMarker=L.marker([lat,lng],{icon}).addTo(map);
+    accCircle=L.circle([lat,lng],{radius:accuracy,color:'#2980b9',weight:1,fillOpacity:.08}).addTo(map);
+    map.setView([lat,lng],14);
+  } else { userMarker.setLatLng([lat,lng]); accCircle.setLatLng([lat,lng]).setRadius(accuracy); }
+
+  if(accuracy>MAX_ACCURACY_M){ setStatus(`🟡 GPS 정확도 낮음 (±${Math.round(accuracy)}m)`,'#b7791f'); return; }
+  setStatus(`🟢 추적 중 (±${Math.round(accuracy)}m)`,'green');
+  renderDist(lat,lng);
+  missionData.forEach(m=>{
+    if(!appState.missions[m.id].unlocked && map.distance([lat,lng],[m.lat,m.lng])<=RADIUS_M) unlockMission(m.id);
+  });
+}
+function renderDist(lat,lng){
+  $('dist-list').innerHTML = missionData.map(m=>{
+    const u=appState.missions[m.id].unlocked, d=Math.round(map.distance([lat,lng],[m.lat,m.lng]));
+    return `<div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--border)"><span>${u?'✅':'🔒'} ${esc(m.name)}</span><b>${d>=1000?(d/1000).toFixed(1)+'km':d+'m'}</b></div>`;
+  }).join('');
+}
+function onPosErr(e){
+  const msg = e.code===1 ? "위치 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요."
+            : e.code===2 ? "위치를 확인할 수 없습니다. 실외에서 다시 시도하세요."
+            : "위치 응답이 지연되고 있습니다.";
+  setStatus('⚠️ '+msg,'red');
+  if(e.code===1) stopTracking();
+}
+function recenterMap(){ userMarker ? map.setView(userMarker.getLatLng(),15,{animate:true}) : toast("아직 위치를 찾는 중입니다."); }
+
+function unlockMission(id, byTeacher){
+  appState.missions[id].unlocked=true; saveState();
+  if(mapCircles[id]){ mapCircles[id].setStyle({color:'#27ae60',fillColor:'#27ae60'}); mapMarkers[id].setPopupContent(popupHtml(id)); }
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  toast(`${byTeacher?'[교사 패스] ':'🎉 도착! '}${nameOf(id)} 미션이 열렸습니다. 현장미션 탭을 확인하세요.`, 4000);
+  $('nav-missions').classList.add('dot');
+}
+function toggleDevMode(){
+  if(!appState.devMode){
+    const pin=prompt("교사용 PIN을 입력하세요.");
+    if(pin!==TEACHER_PIN){ if(pin!==null) toast("PIN이 올바르지 않습니다."); return; }
+    toast("교사 패스 ON: 지도의 핀을 누르면 즉시 해제되고, 관찰 타이머는 건너뜁니다.", 4000);
+  }
+  appState.devMode=!appState.devMode; saveState(); updateDevToggleUI();
+  if($('view-missions').classList.contains('active')) renderMissions();
+}
+function updateDevToggleUI(){ const t=$('dev-toggle'); t.className=appState.devMode?'active':''; t.textContent=appState.devMode?'교사 패스 ON':'교사 패스'; }
+
+// ===== 미션 =====
+function renderMissions(){
+  const list=$('mission-list'); let out="";
+  missionData.forEach(m=>{
+    const s=appState.missions[m.id], done=s.imgBase64&&s.text;
+    let body="";
+    if(!s.unlocked) body=`<p style="color:#c0392b;font-weight:700;text-align:center;padding:16px 0">🔒 지도에서 ${RADIUS_M}m 이내로 접근하세요.</p>`;
+    else if(done) body=`<img src="${s.imgBase64}" class="img-preview" alt="${esc(m.name)} 현장 사진"><p class="pre">${esc(s.text)}</p><button class="btn ghost" onclick="redoMission('${m.id}')">다시 작성</button>`;
+    else if(s.timerEnd===null) body=`<span class="warn">📵 스마트폰 내려놓고 관찰하기</span><p style="text-align:center">${esc(m.observation)}</p><button class="btn" onclick="startTimer('${m.id}')">관찰 시작 (3분)</button>`;
+    else if(!appState.devMode && Date.now()<s.timerEnd) body=`<span class="warn">화면에서 눈을 떼고 현장을 오감으로 느끼세요!</span><div class="timer-box"><div style="color:#E67E22;margin-bottom:4px">입력창 열림까지</div><div class="timer-text" data-timer="${m.id}">--:--</div></div>`;
+    else body=`<p style="color:var(--ok);font-weight:700">✅ 관찰 완료! 미션을 기록하세요.</p><p>${esc(m.task)}</p>
+      <div class="file-wrap"><button class="btn secondary" style="pointer-events:none;margin:0">📸 현장 사진 촬영/첨부</button><input type="file" accept="image/*" capture="environment" aria-label="사진 첨부" onchange="handleImage(event,'${m.id}')"></div>
+      <img id="preview-${m.id}" class="img-preview" style="display:${tempImgs[m.id]?'block':'none'}" ${tempImgs[m.id]?`src="${tempImgs[m.id]}"`:''} alt="첨부 사진 미리보기">
+      <textarea id="text-${m.id}" placeholder="짧은 소감이나 생각을 적어주세요." maxlength="500"></textarea>
+      <button class="btn success" onclick="saveMission('${m.id}')">기록 저장하기</button>`;
+    const tag = s.unlocked && !done ? '<span class="badge b-unlock">진행중</span>' : done ? '<span class="badge b-done">기록 완료</span>' : '';
+    out+=`<div class="card"><h2>${esc(m.name)} ${tag}</h2>${body}</div>`;
+  });
+  list.innerHTML=out;
+  clearInterval(tickId); tickId=setInterval(tick,1000); tick();
+}
+function tick(){
+  if(!$('view-missions').classList.contains('active')){ clearInterval(tickId); return; }
+  let finished=false;
+  document.querySelectorAll('[data-timer]').forEach(el=>{
+    const diff=appState.missions[el.dataset.timer].timerEnd-Date.now();
+    if(diff<=0){ finished=true; return; }
+    el.textContent=String(Math.floor(diff/60000)).padStart(2,'0')+':'+String(Math.floor(diff%60000/1000)).padStart(2,'0');
+  });
+  if(finished){ if(navigator.vibrate) navigator.vibrate(300); renderMissions(); }
+}
+function startTimer(id){ appState.missions[id].timerEnd=Date.now()+OBSERVATION_MS; saveState(); renderMissions(); }
+function redoMission(id){
+  if(!confirm("기존 기록을 지우고 다시 작성할까요?")) return;
+  Object.assign(appState.missions[id],{imgBase64:"",text:""}); saveState(); renderMissions();
+}
+function handleImage(e,id){
+  const file=e.target.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{
+    const MAX=800, sc=Math.min(1,MAX/img.width), c=document.createElement('canvas');
+    c.width=img.width*sc; c.height=img.height*sc;
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    tempImgs[id]=c.toDataURL('image/jpeg',.7); URL.revokeObjectURL(url);
+    const pv=$('preview-'+id); pv.src=tempImgs[id]; pv.style.display='block';
+  };
+  img.onerror=()=>toast("사진을 불러오지 못했습니다. 다른 사진을 선택하세요.");
+  img.src=url;
+}
+function saveMission(id){
+  const text=$('text-'+id).value.trim();
+  if(!tempImgs[id]) return toast("사진을 촬영하거나 첨부해 주세요.");
+  if(!text) return toast("소감을 입력해 주세요.");
+  const s=appState.missions[id], prev={img:s.imgBase64,text:s.text};
+  s.imgBase64=tempImgs[id]; s.text=text;
+  if(!saveState()){ s.imgBase64=prev.img; s.text=prev.text; return; }
+  delete tempImgs[id]; toast("기록이 저장되었습니다."); renderMissions();
+}
+
+// ===== 도감 =====
+function renderRecord(){
+  $('record-username').textContent=appState.studentName;
+  let html="", cnt=0;
+  missionData.forEach(m=>{
+    const s=appState.missions[m.id];
+    if(s.imgBase64&&s.text){ cnt++;
+      html+=`<div style="border-bottom:2px dashed var(--border);padding-bottom:14px;margin-bottom:14px"><h3 style="color:var(--secondary);margin-bottom:8px">📌 ${esc(m.name)}</h3><img src="${s.imgBase64}" style="width:100%;border-radius:5px;margin-bottom:8px" alt=""><p class="pre" style="background:none;padding:0;font-size:.95rem;line-height:1.6">${esc(s.text)}</p></div>`;
+    }
+  });
+  $('record-list').innerHTML = cnt
+    ? `<p style="text-align:right;font-weight:700;margin-bottom:10px">진행률: ${cnt}/${missionData.length}</p>`+html
+    : "<p style='text-align:center;padding:30px 0;color:var(--light)'>아직 기록이 없습니다. 현장미션 탭에서 첫 기록을 남겨보세요.</p>";
+}
+function exportToImage(){
+  const t=$('record-content'), bg=t.style.background; t.style.background='#fff';
+  html2canvas(t,{scale:2,useCORS:true}).then(cv=>{
+    t.style.background=bg;
+    const a=document.createElement('a');
+    a.download=`경주답사도감_${appState.studentId}_${appState.studentName}.png`;
+    a.href=cv.toDataURL('image/png'); a.click();
+  }).catch(()=>{ t.style.background=bg; toast("이미지 저장에 실패했습니다. 화면 캡처를 이용해 주세요."); });
+}
+
+// ===== 신규: 장원급제 등급 연산 =====
+function updateRankUI(){
+  let completedCount = 0;
+  missionData.forEach(m => {
+    const s = appState.missions[m.id];
+    if(s && s.imgBase64 && s.text) completedCount++;
+  });
+
+  const totalScore = completedCount * 100; // 미션 1개당 100pt
+  let rankName = '성균관 유생';
+  let nextText = "다음 등급: '초시 합격' (100pt 필요)";
+
+  if(totalScore >= 500){
+    rankName = '전시 합격 (장원급제)';
+    nextInfo = '최고 등급에 달성하였습니다!';
+  } else if(totalScore >= 300){
+    rankName = '복시 합격 (진사)';
+    nextText = "다음 등급: '장원급제' (500pt 필요)";
+  } else if(totalScore >= 100){
+    rankName = '초시 합격 (생원)';
+    nextText = "다음 등급: '복시 합격' (300pt 필요)";
+  }
+
+  $('user-rank-display').textContent = `${rankName} (${totalScore}pt)`;
+  $('user-rank-next').textContent = nextText;
+  
+  if($('rank-my-team'))$('rank-my-team').textContent = `${appState.studentName} (${appState.studentId})`;
+  if($('rank-my-grade'))$('rank-my-grade').textContent = rankName;
+  if($('rank-my-score'))$('rank-my-score').textContent = `${totalScore} pt`;
+}
+
+window.addEventListener('load', initApp);
+</script>
+</body>
+</html>
